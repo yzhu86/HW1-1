@@ -1,9 +1,11 @@
 
 ---
 title: "HW1"
-author: "[Your Name Here]"
+author: '[Your Name Here]'
 date: "Due  September 11, 2017"
-output: html_notebook
+output:
+  pdf_document: default
+  html_notebook: default
 ---
 
 ```{r setup, include=FALSE}
