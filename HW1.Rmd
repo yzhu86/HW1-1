@@ -4,8 +4,10 @@ title: "HW1"
 author: '[Your Name Here]'
 date: "Due  September 11, 2017"
 output:
-  pdf_document: default
+  html_document:
+    df_print: paged
   html_notebook: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -33,13 +35,13 @@ data(Auto)
 
 ```
 
-3. What is the range of each quantitative predictor? You can answer this using the `range()` function.
+3. What is the range of each quantitative predictor? You can answer this using the `range()` function.   Create a table with variable name, min, max with one row per variable.   `kable` from the package `knitr` can display tables nicely.
 
 ```{r}
 
 ```
 
-4. What is the mean and standard deviation of each quantitative predictor?  _Try to ormat nicely in a table_
+4. What is the mean and standard deviation of each quantitative predictor?  _Format nicely in a table as above_
 
 ```{r}
 
@@ -47,7 +49,7 @@ data(Auto)
 
 5. Now remove the 10th through 85th observations (try this with `filter` from the `dplyr` package). What is the
 range, mean, and standard deviation of each predictor in the
-subset of the data that remains?
+subset of the data that remains?  _Again, present the output as a nicely formated table_
 
 ```{r}
 
@@ -55,12 +57,12 @@ subset of the data that remains?
 
 6. Investigate the predictors graphically, using scatterplot matrices  (`ggpairs`) and other tools of your choice. Create some plots
 highlighting the relationships among the predictors. Comment
-on your findings.
+on your findings.  _Try adding a caption to your figure_
 ```{r}
 
 ```
 
-7. Suppose that we wish to predict gas mileage (mpg) on the basis of the other variables using regression. Do your plots suggest that any of the other variables might be useful in predicting mpg? Justify your answer.
+7. Suppose that we wish to predict gas mileage (mpg) on the basis of the other variables using regression. Do your plots suggest that any of the other variables might be useful in predicting mpg using linear regression? Justify your answer.
 
 ```{r}
 
@@ -84,14 +86,33 @@ positive or negative?
 98? What are the associated 95% confidence and prediction
 intervals?   (see `help(predict)`) Provide interpretations of these for the cardealer.
 
-9. Plot the response and the predictor.  Add these to the plot of the least squares regression line.
+9. Plot the response and the predictor using `ggplot`.  Add to the plot a line showing the least squares regression line. 
 ```{r}
 
 ```
 
-10. Use the `plot()` function to produce diagnostic plots of the least squares regression fit. Comment on any problems you see with the fit.
+10. Use the `plot()` function to produce diagnostic plots of the least squares regression fit. Comment on any problems you see with the fit regarding assumptions for using a simple linear regression.
 
 ```{r}
 
 ```
 
+## Theory
+
+
+
+11. Show that the  regression function $E(Y \mid x) = f(x)$ is the optimal 
+optimal predictor of $Y$ given $X = x$ using squared error loss:  that is $f(x)$
+minimizes $E[(Y - g(x))^2 \mid X =x]$ over all functions $g(x)$ at all points $X=x$.
+
+12. Irreducible error:  
+     (a) show  that for any estimator $\hat{f}(x)$ that
+$$E[(Y - \hat{f}(x))^2 \mid X = x] = 
+\underbrace{(f(x) - \hat{f}(x)))^2}_{Reducible} + \underbrace{\textsf{Var}(\epsilon)}_{Irreducible}
+$$
+   (b) Show that the prediction error can never be smaller than
+ $$E[(Y - \hat{f}(x))^2 \mid X = x] \ge 
+ \underbrace{\textsf{Var}(\epsilon)}_{Irreducible}
+$$
+
+e.g. even if we can learn $f(x)$ perfectly that the error in prediction will not vanish. 
