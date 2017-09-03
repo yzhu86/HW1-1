@@ -111,8 +111,7 @@ $$E[(Y - \hat{f}(x))^2 \mid X = x] =
 \underbrace{(f(x) - \hat{f}(x)))^2}_{Reducible} + \underbrace{\textsf{Var}(\epsilon)}_{Irreducible}
 $$
    (b) Show that the prediction error can never be smaller than
- $$E[(Y - \hat{f}(x))^2 \mid X = x] \ge 
- \underbrace{\textsf{Var}(\epsilon)}_{Irreducible}
+ $$E[(Y - \hat{f}(x))^2 \mid X = x] \ge \textsf{Var}(\epsilon)
 $$
 
-e.g. even if we can learn $f(x)$ perfectly that the error in prediction will not vanish. 
+e.g. even if we can learn $f(x)$ perfectly that the error in prediction will not vanish.   
