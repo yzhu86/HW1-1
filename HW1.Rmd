@@ -1,4 +1,3 @@
-
 ---
 title: "HW1"
 author: '[Your Name Here]'
