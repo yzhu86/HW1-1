@@ -1,7 +1,7 @@
 ---
 title: "HW1"
 author: '[Your Name Here]'
-date: "Due  September 11, 2017"
+date: "Due Monday September 11, 2017"
 output:
   html_document:
     df_print: paged
@@ -15,7 +15,7 @@ library(ISLR)
 # add other libraries here
 ```
 
-This exercise involves the Auto data set from ISLR.  Load the data and answer the following questions adding your code in the code chunks. 
+This exercise involves the Auto data set from ISLR.  Load the data and answer the following questions adding your code in the code chunks. Please submit a pdf version to Sakai.  For full credit, you should push your final Rmd file to your github repo on the STA521-F17 organization site.
 
 ```{r data, echo=F}
 data(Auto)
@@ -90,7 +90,7 @@ intervals?   (see `help(predict)`) Provide interpretations of these for the card
 
 ```
 
-10. Use the `plot()` function to produce diagnostic plots of the least squares regression fit. Comment on any problems you see with the fit regarding assumptions for using a simple linear regression.
+10. Use the `plot()` function to produce diagnostic plots of the least squares regression fit. Comment on any problems you see with the model regarding assumptions for using a simple linear regression.  
 
 ```{r}
 
