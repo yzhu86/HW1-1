@@ -1,17 +1,24 @@
 ---
 title: "HW1"
-author: '[Your Name Here]'
+author: '[Yi Zhu]'
 date: "Due Monday September 11, 2017"
 output:
+  pdf_document: default
+  html_notebook: default
   html_document:
     df_print: paged
-  html_notebook: default
-  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(ISLR)
+library(knitr)
+library(plyr)
+library(dplyr)
+library(GGally)
+library(ggplot2)
+
+
 # add other libraries here
 ```
 
@@ -24,47 +31,127 @@ data(Auto)
 ## Exploratory Data Analysis
 1. Create a summary of the data.  How many variables have missing data?
 
+The dim(Auto) function tells us that there are 392 observations, or rows. The complete.cases() function returns a logical vector indicating which cases are complete(without missing data). Since complete.cases(Auto) returns TRUE for all the rows, there are no missing data for each row and therefore no variables have missing data.
 ```{r}
-
+    dim(Auto)
+    summary(Auto)
+    summary(complete.cases(Auto))
 ```
+     
+
+
 
 
 2.  Which of the predictors are quantitative, and which are qualitative?
 ```{r}
+    str(Auto)
+```
+According to the output of str(Auto), the only qualitative predictor is "name"(Factor). However, from the summary above, it is noticed that the predictors, "origin" and "cylinders", both have a small number of possible values. "Origin" can only vary from 1 to 3(interger) while "cylinders" can only vary from 3 to 8(interger). "Years" also falls into certain number of catagories but the number of catagories is relatively large. Therefore, one may prefer to treat "origin" and "cylinders" as qualitative predictors by the following code:
+```{r}
+    Auto$cylinders<-as.factor(Auto$cylinders)
+    Auto$origin<-as.factor(Auto$origin)
+```
+And we can check the result of the conversion by the following code:
+```{r}
+    sapply(Auto, class)
+```
+3. What is the range of each quantitative predictor? You can answer this using the `range()` function.   Create a table with variable name, min, max with one row per variable.   `kable` from the package `knitr` can display tables nicely.
+
+In the previous question, we have converted the class type of all the qualitative predictors to factor, therefore, we can select all the quantitative predictors by sapply(Auto, is.numeric). First, we display the ranges of each predictor:
+```{r}
+    sapply(Auto[, sapply(Auto,is.numeric)], range)
+    
 
 ```
 
-3. What is the range of each quantitative predictor? You can answer this using the `range()` function.   Create a table with variable name, min, max with one row per variable.   `kable` from the package `knitr` can display tables nicely.
-
+Then, we create a table with variable name, min, max with one row per variable:
 ```{r}
+    dt_maxmin<-sapply(Auto[, sapply(Auto,is.numeric)], function(x) round(c(max(x), min(x)), 2))
+    rownames(dt_maxmin)<-c("max","min")
+    kable(t(dt_maxmin))
 
 ```
 
 4. What is the mean and standard deviation of each quantitative predictor?  _Format nicely in a table as above_
 
 ```{r}
-
+    dt_msd<-sapply(Auto[, sapply(Auto,is.numeric)], function(x) round(c(mean(x), sd(x)), 2))
+    rownames(dt_msd)<-c("mean","standard deviation")
+    kable(t(dt_msd))
 ```
 
 5. Now remove the 10th through 85th observations (try this with `filter` from the `dplyr` package). What is the
 range, mean, and standard deviation of each predictor in the
-subset of the data that remains?  _Again, present the output as a nicely formated table_
+subset of the data that remains?  _Again, present the output as a nicely formated table_  
+
+Remove the rows and check if the rows have been removed by the following code:
 
 ```{r}
+    Auto_new<- Auto %>%
+    mutate(i = 1:nrow(Auto)) %>%
+    filter(i <= 9 | i >= 86)
+    Auto_new$i<-NULL
+    dim(Auto_new)
+    
+    dt_msrd<-sapply(Auto_new[, sapply(Auto_new,is.numeric)], function(x) round(c(range(x),mean(x), sd(x)), 2))
+    rownames(dt_msrd)<-c("range","","mean","standard deviation")
+    kable(t(dt_msrd))
+    
 
 ```
 
 6. Investigate the predictors graphically, using scatterplot matrices  (`ggpairs`) and other tools of your choice. Create some plots
 highlighting the relationships among the predictors. Comment
 on your findings.  _Try adding a caption to your figure_
+
+The scatter plot of all varables:
+```{r, message=FALSE}
+    ggpairs(Auto[ ,1:8])
+```    
+
+From the following plot, we can see that weight, engine displacement and engine horsepower seem to have an inverse effect (negatively correlated) with mpg, indicating the fuel consumption per mile. 
+
 ```{r}
+    pairs(~ mpg + displacement + horsepower +weight, data = Auto, panel = panel.smooth,
+      main = "Pairwise plot of engine ")
+```    
 
-```
+When plotting year versus mpg, we perfer to treat year as a factor in order to see more clearly. From the following plot, we can see that year seems to have a positive effect(positively correlated) with mpg. One possible explanation is that year is positively correlated with technology advance and new technologies can make the engine more efficient and fuel saving.
+    
+```{r}
+    Auto$year<-as.factor(Auto$year)
+    plot(Auto$mpg~Auto$year, main="plot of year vs. mpg", xlab = "year", ylab="mpg")
+```    
 
-7. Suppose that we wish to predict gas mileage (mpg) on the basis of the other variables using regression. Do your plots suggest that any of the other variables might be useful in predicting mpg using linear regression? Justify your answer.
+Previously, we treated origin as a factor predictor because is falls into only three catalories but we did not know what the numbers 1,2 and 3 correspond to. Now, in order to investigate the relationship between origin and mpg, we must know what these values represent. We extract the first 8 unique names from each origin. And we find that 1 is corresponding to America, 2 is corresponding to Europe and 3 is corresponding to Japan. Therefore, Japanese cars seem the most fuel-saving while American cars consume the most fuel. It is probably beacause Japanese cars correpond to less weigh, horsepower and displacement, which are negatively correlated to mpg.  
+
+```{r}  
+    head(unique(Auto$name[as.numeric(Auto$origin)==1]), 8)
+    head(unique(Auto$name[as.numeric(Auto$origin)==2]), 8)
+    head(unique(Auto$name[as.numeric(Auto$origin)==3]), 8)
+    plot( Auto$mpg ~ Auto$origin ,main="plot of origin vs. mpg", xlab ="origin", ylab="mpg")
+```     
+
+From the following plot, we can see that cars with more cylinders generally have less mpg (higher fuel consumption). But we notice that cars with 3 cylinders also have low mpg. So we extract the names all the cars with 3 cylinders and we find that these cars all belong to Mazda rx series. Mazda rx series use unique engines called Mazda Wankel engine(a particular type of pistonless rotary engine). These engines are known for their high fuel consumption. Due to theie design, the surface to volume ratio of their combustion chamber is high compared to piston engines(there are also other physical and chemical reasons). Without this group, we can see that cylinders seems to have a negative effect on mpg.
+ 
 
 ```{r}
+     head(unique(Auto$name[Auto$cylinders==3]), 8)
+    plot(Auto$mpg~Auto$cylinders, main="plot of cylinders vs. mpg", xlab = "cylinders", ylab="mpg")
+```    
 
+
+
+
+
+7. Suppose that we wish to predict gas mileage (mpg) on the basis of the other variables using regression. Do your plots suggest that any of the other variables might be useful in predicting mpg using linear regression? Justify your answer.  
+
+From the plots and analysis above in question 6, horsepower, cylinders, year and origin can be used as predictors. Since displacement and weight are highly correlated with horsepower and they are also highly correlated with each other, they are not used as predictors.
+    
+```{r}
+    cor(Auto$weight, Auto$horsepower)
+    cor(Auto$displacement, Auto$horsepower)
+    cor(Auto$weight, Auto$displacement)
 ```
 
 
@@ -83,17 +170,56 @@ positive or negative?
     (d)  Provide a brief interpretation of the parameters that would suitable for discussing with a car dealer, who has little statistical background.
     (e) What is the predicted mpg associated with a horsepower of
 98? What are the associated 95% confidence and prediction
-intervals?   (see `help(predict)`) Provide interpretations of these for the cardealer.
-
-9. Plot the response and the predictor using `ggplot`.  Add to the plot a line showing the least squares regression line. 
+intervals?   (see `help(predict)`) Provide interpretations of these for the cardealer.  
 ```{r}
+    Auto_fit<-lm(mpg~horsepower, data=Auto)
+    summary(Auto_fit)
+```
+(a) Null hypothesis H0:There is no relationship between horsepower and mpg.  
+Yes, there is a high probability that there is a relationship between horsepower and mpg. From the model output, we can see that the $Pr(>t)$ acronym are very close to 0, which indicates that the probability to observe a relationship between the predictor(horsepower) and the response (mpg) by chance is very small. Small p-values for both the intercept and the slope indicate that the null hypothesis can be rejected and we are highly confident that there is a relationship between horsepower and mpg. Moreover, the F-statistic is about 600 at 390 DF, which is far from 1, and the p-value for F-statistic is very close to 0. This also indicates that the null hypothesis can be rejected.  
 
+(b) The relationship between horsepower and mpg is fairly strong.  
+From the model output, the $R^2$ we get is 0.6049, indicating that about 60% of the variance found in the response(mpg) can be explained by the perdictor(horsepower). Moreover, in the model output,  we can see that the distribution of the residuals appears to be fairly symmetric. This also indicates a fairly strong relationship between horsepower and mpg.  
+
+(c) The relationship between horsepower and mpg is negative due to a slope of -0.157845 and a relatively small standard error, 0.006446.   
+
+(d) Residuals are the differences between the actual observed values and the values predicted by the model. For example, we observed that the mpg of a Mazda is 20. In order to get the predicted value, we input the horsepower of this car, for example 95(this is also observed data), to the linear model, in this case $mpg=-0.158horsepower+39.94$, to predict the mpg. After input horsepower, we get 24.93, which is the predicted value. And the difference $24.93-20=4.93$ is the residual.  
+Coefficients are the value of $\beta_0$ and $\beta_1$ in the model $mpg=\beta_0horsepower+\beta_1$ while the standard errors indicate how far(in both directions) the coefficients can vary from the predicted value. The t-value correponds to the number of standard deviations estimated by our model that are far away from 0. The p-values in coefficients section indicate the probability to observe a relationship between the predictor(horsepower) and the response (mpg) by chance.  
+Residual Standard Error measures the quality of our linear regression fit.  
+Mutiple R-squared measures how well the predicted model fits the actual data. From the model output, the $R2$ we get is 0.6049, indicating that about 60% of the variance found inthe response(mpg) can be explained by the perdictor(horsepower).  
+F-statistic is an indicator of the presence of a relationship between the predictor(horsepower) and the response(mpg). The p-value for F-statistic is very close to 0, indicating that the hypothesis, there is no relationship between horsepower and mpg, can be rejected. And we can conclude, at a certain confidence level, there is a relationship between horsepower and mpg.
+
+(e) With the following code, the predicted value of mpg associated with a horsepower of 98 would be about 24.47 with associated confidance interval (23.97, 24.96) and prediction interval(14.81, 34.12)  
+Interpretation: confidence interval indicate that if we conduct random sampling mutiple times and calculate a confidence interval based on the corresponding sample each time, 95% of these intervals would be expected to contain the true value of the population mean. Basicly, this interval tells us how well we have the population mean determined. Prediction interval indicate where the next sampled data point(e.g. the next mpg) would be expected to lie into. More specifically, first, we collected a random sample and calculate a prediction interval based on the sample, then we sample one more value. If we repeat this process multiple times, we would expect 95% of the next values would lie into the interval (14.81, 34.12).
+
+
+```{r}
+    predict(Auto_fit, data.frame(horsepower = (c(98))))
+    predict(Auto_fit, data.frame(horsepower = (c(98))), interval = "confidence")
+    predict(Auto_fit, data.frame(horsepower = (c(98))), interval = "prediction")
+   
+```
+
+
+
+9. Plot the response and the predictor using `ggplot`.  Add to the plot a line showing the least squares regression line.
+```{r, message=FALSE}
+    qplot(horsepower,mpg,data=Auto,geom=c("point","smooth"), method="lm")
 ```
 
 10. Use the `plot()` function to produce diagnostic plots of the least squares regression fit. Comment on any problems you see with the model regarding assumptions for using a simple linear regression.  
 
-```{r}
+From the following diagrams:  
 
+In Residuals vs. Fitted diagram, we can see a U-shape, suggesting the presence of non-linear relationship in the data. The non-linear relationship, which is not explained by the model, was left out in the residuals.   
+
+In normal Q-Q, the residuals appear to be normally distributed  
+
+In Scale-Location, we can also see a U-shape as in Residuals vs. Fitted. 
+
+```{r}
+    par(mfrow = c(2, 2))
+    plot(Auto_fit, ask =F)
 ```
 
 ## Theory
@@ -102,15 +228,66 @@ intervals?   (see `help(predict)`) Provide interpretations of these for the card
 
 11. Show that the  regression function $E(Y \mid x) = f(x)$ is the optimal 
 optimal predictor of $Y$ given $X = x$ using squared error loss:  that is $f(x)$
-minimizes $E[(Y - g(x))^2 \mid X =x]$ over all functions $g(x)$ at all points $X=x$.
+minimizes $E[(Y - g(x))^2 \mid X =x]$ over all functions $g(x)$ at all points $X=x$.  
+
+Solution: let $g(x)$ be any function of $x$, then: 
+
+
+$$
+\begin{aligned}
+ E[(Y - g(X))^2 ] & =  E[(Y - f(X)+f(X)-g(X))^2 ]\\
+ & =  E[(Y - f(X))^2]+E[(f(X) - g(X))^2]+2E[(Y - f(X))(f(X)-g(X)) ]\\
+& \geq  E[(Y - f(X))^2]+2E[(Y - f(X))(f(X)-g(X))]\\
+& =  E[(Y - f(X))^2]+2E[E[(Y - f(X))(f(X)-g(X))|X=x]]\\
+& =  E[(Y - f(X))^2]+2E[E[(Y - f(X))|X=x](f(x)-g(x))]\\
+& =  E[(Y - f(X))^2]+2E[(E[Y|X=x] - f(x))(f(x)-g(x))]\\
+& =  E[(Y - f(X))^2]+2E[(f(x) - f(x))(f(x)-g(x))]\\
+& =  E[(Y - f(X))^2]+2E[0(f(x)-g(x))]\\
+& =  E[(Y - f(X))^2]
+\end{aligned}
+$$
+
+Therefore, $E[(Y - g(X))^2 ]  \geq  E[(Y - f(X))^2]$ for any $g(x)$.  
+
+Therefore, $f(x)$ is the optimal predictor.
+   
+   
+
 
 12. Irreducible error:  
      (a) show  that for any estimator $\hat{f}(x)$ that
 $$E[(Y - \hat{f}(x))^2 \mid X = x] = 
 \underbrace{(f(x) - \hat{f}(x)))^2}_{Reducible} + \underbrace{\textsf{Var}(\epsilon)}_{Irreducible}
 $$
-   (b) Show that the prediction error can never be smaller than
- $$E[(Y - \hat{f}(x))^2 \mid X = x] \ge \textsf{Var}(\epsilon)
+
+
+Solution: notice   $E[\epsilon]=0$, $Var(\epsilon)=E[(\epsilon-E[\epsilon])^2]=E[(\epsilon-0)^2]=E[\epsilon^2]$, $f(x)$ and $\hat{f}(x)$ are constants then:
+
+
+
+$$
+\begin{aligned}
+ E[(Y - \hat{f}(X))^2 \mid X = x] &= E[(f(x)+\epsilon - \hat{f}(x))^2]\\
+ &= E[((f(x) - \hat{f}(x))+\epsilon)^2]\\
+ &= E[(f(x) - \hat{f}(x))^2+2\epsilon(f(x)-\hat{f}(x))+\epsilon^2]\\
+ &= E[(f(x) - \hat{f}(x))^2]+E[2\epsilon(f(x)-\hat{f}(x))]+E[\epsilon^2]\\
+ &= (f(x) - \hat{f}(x))^2+2(f(x)-\hat{f}(x))E[\epsilon]+E[\epsilon^2]\\
+ &= (f(x) - \hat{f}(x))^2+2(f(x)-\hat{f}(x))0+Var(\epsilon)\\
+ &= (f(x) - \hat{f}(x))^2+Var(\epsilon)
+\end{aligned}
 $$
 
+
+
+   (b) Show that the prediction error can never be smaller than
+ $$E[(Y - \hat{f}(x))^2 \mid X = x] \ge \textsf{Var}(\epsilon)
+$$  
+
+Solution: from part(a), we obtained $$E[(Y - \hat{f}(x))^2 \mid X = x] = 
+\underbrace{(f(x) - \hat{f}(x)))^2}_{Reducible} + \underbrace{\textsf{Var}(\epsilon)}_{Irreducible}$$  
+
+Since $(f(x) - \hat{f}(x))^2 \geq 0$
+we have $E[(Y - \hat{f}(X))^2 \mid X = x]=(f(x) - \hat{f}(x))^2+Var(\epsilon)\geq Var(\epsilon)$  
+  
+  
 e.g. even if we can learn $f(x)$ perfectly that the error in prediction will not vanish.   
